@@ -52,9 +52,35 @@ function App() {
   const [amountOut, setAmountOut] = useState('0');
   const [sourceToken, setSourceToken] = useState(tokenList[0].address)
   const [targetToken, setTargetToken] = useState(tokenList[1].address)
+  const [loading, setLoading] = useState(false);
   const { open } = useWeb3Modal();
   const { address, isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider()
+
+  const _renderLoading = () => {
+    return (
+      <svg
+        className="animate-spin -ml-1 mr-3 h-5 w-5"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="3"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+    );
+  };
 
   useEffect(() => {
     (async () => {
@@ -89,6 +115,7 @@ function App() {
         toast.error('Wallet is not connected!');
         return;
       }
+      setLoading(true);
       const ethersProvider = new ethers.providers.Web3Provider(walletProvider);
       const signer = ethersProvider.getSigner();
       const token = new Contract(sourceToken, ERC20.abi, signer);
@@ -111,8 +138,10 @@ function App() {
       );
       await swapTxn.wait();
       toast.success("Bought successfully")
+      setLoading(false);
     } catch (e) {
       console.log(e)
+      setLoading(false);
     }
   }, [amountIn, sourceToken, targetToken]);
 
@@ -176,9 +205,15 @@ function App() {
           </div>
           <div>
             <button
+              disabled={loading}
               onClick={buyHandler}
-              className='w-full h-[40px] bg-amber-400 text-white rounded-xl font-bold'
+              className={`w-full h-[40px] flex justify-center items-center ${loading ? 'bg-amber-200' : 'bg-amber-400'} text-white rounded-xl font-bold`}
             >
+              <div>
+                {
+                  loading && (<_renderLoading  />)
+                }
+              </div>
               Buy
             </button>
           </div>
